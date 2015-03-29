@@ -1,0 +1,74 @@
+body, td {
+	font-size: 11px;
+	font-family: "Avenir Next", Verdana, sans-serif;
+}
+
+a {
+	color: #fb0098;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
+}
+
+table {
+	border-spacing: 0px;
+}
+th {
+	margin: 0px;
+	border-bottom: 1px solid black;
+	border-collapse: collapse;
+}
+
+.DirectoryItem a {
+	font-weight: bold;
+}
+
+.SlideShow {
+	background: white;
+	display: inline-block;
+	margin: 10px auto;
+	text-align:center;
+}
+.SlideShow img {
+	display: inline-block;
+	border: 10px solid white;
+	box-shadow: 10px 10px 25px #666;
+	max-width: 90vw;
+	max-height: 90vh;
+}
+
+.SlideShow .ToolBar {
+	position: fixed;
+	display: inline-block;
+	visibility: hidden;
+	background-color: white;
+}
+.SlideShow:hover .ToolBar {
+	visibility: visible;
+}
+
+ul.ToolBar {
+	margin: 0px;
+	padding: 0px;
+	opacity: 0.7;
+}
+.ToolBar li {
+	list-style: none;
+	margin: 0px 5px 0px 0px;
+	padding: 0px;
+	float: left;
+}
+.ToolBar li:after {
+	content: '';
+	clear: both;
+}
+.ToolBar a.ToolbarButton {
+	display: block;
+	font-weight: bold;
+	padding: 3px;
+	border-radius: 3px;
+}
+.ToolBar a:hover {
+	background-color: #ccc;
+}
