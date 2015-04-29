@@ -30,17 +30,25 @@ th {
 	margin: 10px auto;
 	text-align:center;
 }
-.SlideShow img {
+.SlideShow .SlideContainer {
 	display: inline-block;
 	border: 10px solid white;
 	box-shadow: 10px 10px 25px #666;
+}
+.SlideShow .SlideContainer:after {
+	content: "";
+	display: block;
+	clear: both;
+}
+
+.SlideShow .Slide img {
 	max-width: 90vw;
 	max-height: 90vh;
 }
 
 .SlideShow .ToolBar {
-	position: fixed;
 	display: inline-block;
+	position: absolute;
 	visibility: hidden;
 	background-color: white;
 }
@@ -48,20 +56,32 @@ th {
 	visibility: visible;
 }
 
+.SlideShow .SlideContainer .InfoField {
+	float: left;
+	max-width: 40em;
+}
+
 ul.ToolBar {
 	margin: 0px;
 	padding: 0px;
 	opacity: 0.7;
 }
+ul.Toolbar:after {
+	content: "";
+	display: block;
+	clear: both;
+}
 .ToolBar li {
 	list-style: none;
-	margin: 0px 5px 0px 0px;
+	margin: 3px 3px 3px 0px;
 	padding: 0px;
+	display: block;
 	float: left;
+	height: 22px;
+	line-height: 22px;
 }
-.ToolBar li:after {
-	content: '';
-	clear: both;
+.ToolBar li:first-child {
+	margin-left: 3px;
 }
 .ToolBar a.ToolbarButton {
 	display: block;
@@ -71,4 +91,25 @@ ul.ToolBar {
 }
 .ToolBar a:hover {
 	background-color: #ccc;
+}
+.ToolBar form {
+	margin: 1px 0px;
+}
+
+.DirectoryBreadCrumbs .DirectoryComponent {
+}
+.DirectoryBreadCrumbs .DirectoryComponent:after {
+	content: '/';
+}
+
+.InfoField {
+	margin-top: 3px;
+	text-align: left;
+}
+.InfoField .label {
+	float: left;
+	font-weight: bold;
+	text-align: right;
+	min-width: 7em;
+	margin-right: 0.5em;
 }

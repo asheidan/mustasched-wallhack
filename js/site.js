@@ -1,56 +1,173 @@
+var types = {
+	"file": {
+		"name": "string",
+		"url": "string"
+	},
+	"dir": {
+		"name": "string",
+		"url": "string"
+	}
+};
+
 var ToolbarButton = React.createClass({
+	handleClick: function (event) {
+		event.preventDefault();
+		this.props.action();
+	},
 	render: function () {
 		var iconUrl = "/static/img/icons/" + this.props.icon + ".png";
-		return (<li><a href="#" className="ToolbarButton" onClick={this.props.action} title={this.props.text}><img src={iconUrl} /></a></li>);
+		var style = {
+			width: "16px",
+			height: "16px"
+		};
+		return (
+			<li>
+				<a href="#" style={style} className="ToolbarButton" onClick={this.handleClick} title={this.props.text}>
+					<img width="16" height="16" src={iconUrl} />
+				</a>
+			</li>
+		);
 	}
 });
 
 var SlideShow = React.createClass({
 	getInitialState: function () {
-		return {currentSlide: 0, visible: true};
+		return {currentSlide: 0, files: [], dirs: []};
+	},
+	slideshowRecursive: function (url) {
+		this.fetchDirectoryList(url);
+	},
+	fetchDirectoryList: function (url) {
+		console.log(url);
+		this.setState({url: url});
+		$.ajax({
+			url: url,
+			dataType: 'json',
+			success: function (data) {
+				var dirs = this.state.dirs;
+				data.dirs = dirs.concat(data.dirs);
+
+				var files = data.files.filter(function (file) {
+					return file.name.match(SlideShow.validImages);
+				});
+				data.files = files;
+
+				this.setState(data);
+				if (this.state.files.length === 0) {
+					this.next();
+					return;
+				}
+				this.setState({currentSlide: 0});
+			}.bind(this),
+			error: function (xhr, status, err) {
+				console.error(url, status, err.toString());
+			}.bind(this)
+		});
+	},
+	prev: function () {
+		var currentSlide = this.state.currentSlide;
+		if (currentSlide > 0) {
+			currentSlide -= 1;
+		}
+		else {
+			currentSlide = this.state.files.length - 1;
+		}
+		this.setState({currentSlide: currentSlide});
+		if (this.state.timer) {
+			this.resetTimer();
+		}
 	},
 	next: function () {
-		this.setState({currentSlide: this.state.currentSlide + 1});
-		this.resetTimer();
+		var currentSlide = this.state.currentSlide + 1;
+		if (currentSlide >= this.state.files.length) {
+			currentSlide = 0;
+			var dirs = this.state.dirs;
+			var nextDir = dirs.shift();
+			if (nextDir) {
+				this.fetchDirectoryList(nextDir.url);
+			}
+			this.setState({currentSlide: currentSlide});
+		}
+		else {
+			this.setState({currentSlide: currentSlide});
+		}
+		if (this.state.timer) {
+			this.resetTimer();
+		}
 	},
 	resetTimer: function () {
 		this.stop();
-		this.state.timer = window.setTimeout(this.next, 5000);
+		this.setState({timer: window.setTimeout(this.next, 5000)});
 	},
 	stop: function () {
-		if (this.state.timer) {
-			window.clearTimeout(this.state.timer);
+		var timer = this.state.timer;
+		if (timer) {
+			window.clearTimeout(timer);
+			this.setState({timer: undefined});
 		}
 	},
 	hide: function () {
 	},
 	render: function () {
 		var style = {
-			display: this.state.visible ? "block" : "none"
+			display: this.state.files.length > 0 ? "block" : "none"
 		};
+		var playPauseIcon = this.state.timer ? 'stop' : 'play';
+		var playPauseAction = this.state.timer ? this.stop : this.resetTimer;
 		var current = this.state.currentSlide;
-		var slides = this.props.slides.slice(current, current + 1);
+		var slides = this.state.files.slice(current, current + 1);
 		var slide;
 		if (slides.length > 0) {
-			slide = (<Slide src={slides[0]} next={this.next}/>);
+			slide = (<Slide key="1" src={slides[0]} next={this.next}/>);
 		}
 		return (
 			<div style={style} className="SlideShow">
-				<ul className="ToolBar">
-				<ToolbarButton text="Stop" action={this.stop} />
-				<li><span>{current}</span>/<span>{this.props.slides.length}</span></li>
-				</ul>
-				{slide}
+				<div className="SlideContainer">
+					<ul className="ToolBar">
+						<ToolbarButton text="Prev" icon="prev" action={this.prev} />
+						<ToolbarButton text={playPauseIcon} icon={playPauseIcon} action={playPauseAction} />
+						<ToolbarButton text="Next" icon="next" action={this.next} />
+						<li><div><span>{current + 1}</span>/<span>{this.state.files.length}</span></div></li>
+					</ul>
+					{slide}
+				</div>
 			</div>);
+	}
+});
+SlideShow.validImages = new RegExp("\.(?:jpe?g|gif|png)$", "i");
+
+var InfoField = React.createClass({
+	render: function () {
+		return (
+				<div className="InfoField"><span className="label">{this.props.name}</span><span>{this.props.value}</span></div>
+		);
 	}
 });
 
 var Slide = React.createClass({
 	handleClick: function (event) {
+		event.preventDefault();
 		this.props.next();
 	},
 	render: function () {
-		return (<img className="Slide" src={this.props.src.url} alt={this.props.src.name} onClick={this.handleClick} />)
+		var extra = [];
+		if (this.props.extra) {
+			for (var name in this.props.extra) {
+				var value = this.props.extra[name];
+				extra.push(
+						<InfoField name={name} value={value} />
+				);
+			}
+		}
+		return (
+				<div className="Slide">
+				<img src={this.props.src.url} alt={this.props.src.name} onClick={this.handleClick} />
+				<div className="SlideInformation">
+				<InfoField name="filename" value={this.props.src.name} />
+				{extra}
+				</div>
+				</div>
+		);
 	}
 });
 
@@ -71,22 +188,31 @@ var FilterWidget = React.createClass({
 
 var DirectoryComponent = React.createClass({
 	handleClick: function (event) {
-		this.props.changedir(this.props.path);
+		event.preventDefault();
+		this.props.changedir(this.props.dir);
 	},
 	render: function () {
-		return (<a href="#" onClick={this.handleClick}>{this.props.name}</a>);
+		return (<a href="#" className="DirectoryComponent" onClick={this.handleClick}>{this.props.dir.name}</a>);
 	}
 });
 
 var DirectoryBreadCrumbs = React.createClass({
 	render: function () {
 		var pathComponents = this.props.path.split('/').filter(function (s) { return s; });
-		console.log(pathComponents);
-		var currentPath = "";
-		var links = pathComponents.map(function (component) {
+		var currentPath = "/list";
+		var dir = {
+			name: "...",
+			url: "/list/"
+		};
+		var links = [(<DirectoryComponent dir={dir} changedir={this.props.changedir} />)];
+		pathComponents.forEach(function (component) {
 			currentPath = [currentPath, component].join('/');
-			var element = (<DirectoryComponent path={currentPath} name={component} changedir={this.props.changedir} />);
-			return element;
+			var dir = {
+				name: component,
+				url: currentPath,
+			};
+			var element = (<DirectoryComponent dir={dir} changedir={this.props.changedir} />);
+			links.push(element);
 		}.bind(this));
 		return (<div className="DirectoryBreadCrumbs">{links}</div>);
 	}
@@ -94,9 +220,10 @@ var DirectoryBreadCrumbs = React.createClass({
 
 var FileBrowser = React.createClass({
 	getInitialState: function () {
-		return {url: this.props.url, root:".../", files:[], dirs:[], slides: []};
+		return {url: this.props.url, root:".../", files:[], dirs:[], slideshow: undefined};
 	},
-	changeDirectory: function (path) {
+	changeDirectory: function (dir) {
+		/*
 		var url;
 		if (path.match(/^\//)) {
 			url = path;
@@ -108,15 +235,16 @@ var FileBrowser = React.createClass({
 			}
 			url = this.state.url + separator + path;
 		}
-		this.setState({url: url, filterText: ""});
-		this.fetchDirectoryList(url);
+		*/
+		this.setState({url: dir.url, filterText: ""});
+		this.fetchDirectoryList(dir.url);
 	},
 	slideShowCurrentDir: function (event) {
-		this.setState({slides: this.state.files});
+		this.refs.slideshow.slideshowRecursive(this.state.url);
 	},
 	fetchDirectoryList: function (url) {
 		$.ajax({
-			url: "/list/" + url,
+			url: url,
 			dataType: 'json',
 			success: function (data) {
 				this.setState(data);
@@ -134,12 +262,12 @@ var FileBrowser = React.createClass({
 	},
 	render: function () {
 		return (<div className="FileBrowser">
-				<SlideShow slides={this.state.slides} />
+				<SlideShow ref="slideshow" />
+				<DirectoryBreadCrumbs path={this.state.root} changedir={this.changeDirectory} />
 				<ul className="ToolBar">
-				<li><DirectoryBreadCrumbs path={this.state.root} changedir={this.changeDirectory} /></li>
 				<ToolbarButton action={this.slideShowCurrentDir} icon="slideshow" text="Slideshow" />
+				<li><FilterWidget filterText={this.state.filterText} onUserInput={this.handleUserInput} /></li>
 				</ul>
-				<FilterWidget filterText={this.state.filterText} onUserInput={this.handleUserInput} />
 				<table>
 				<tr><th></th><th>Name</th></tr>
 				<DirectoryList dirs={this.state.dirs} changedir={this.changeDirectory} filterText={this.state.filterText} />
@@ -154,14 +282,14 @@ var DirectoryList = React.createClass({
 		var dirs = [];
 		if (this.props.filterText) {
 			var reg = new RegExp(this.props.filterText, "i");
-			dirs = this.props.dirs.filter(function (dir) { return dir.match(reg); });
+			dirs = this.props.dirs.filter(function (dir) { return dir.name.match(reg); });
 		}
 		else {
 			dirs = this.props.dirs;
 		}
 
 		var rows = dirs.map(function (dir) {
-			return (<DirectoryItem name={dir} changedir={this.props.changedir} />);
+			return (<DirectoryItem data={dir} changedir={this.props.changedir} />);
 		}.bind(this));
 
 		return (<tbody className="DirectoryList">{rows}</tbody>);
@@ -170,10 +298,11 @@ var DirectoryList = React.createClass({
 
 var DirectoryItem = React.createClass({
 	handleClick: function (event) {
-		this.props.changedir(this.props.name);
+		event.preventDefault();
+		this.props.changedir(this.props.data);
 	},
 	render: function () {
-		return (<tr className="DirectoryItem"><td>D</td><td><a href="#" onClick={this.handleClick}>{this.props.name}/</a></td></tr>);
+		return (<tr className="DirectoryItem"><td>D</td><td><a href="#" onClick={this.handleClick}>{this.props.data.name}/</a></td></tr>);
 	},
 });
 
@@ -198,11 +327,14 @@ var FileList = React.createClass({
 });
 
 var FileItem = React.createClass({
+	handleClick: function (event) {
+		event.preventDefault();
+	},
 	render: function () {
 		var files = [];
-		return (<tr><td>F</td><td><a href="">{this.props.file.name}</a></td></tr>);
+		return (<tr><td>F</td><td><a href="#" onClick={this.handleClick}>{this.props.file.name}</a></td></tr>);
 	},
 });
 
-React.render(<FileBrowser url="/" />,
+React.render(<FileBrowser url="/list/" />,
 			 document.getElementById('content'));

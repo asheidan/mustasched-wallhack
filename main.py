@@ -32,6 +32,20 @@ class Image:
                 "url": self.url,
                 }
 
+class Directory:
+    def __init__(self, name, parent):
+        self.name = name
+        self.parent = parent
+
+    @property
+    def url(self):
+        return "/list" + os.path.join(self.parent, self.name)
+
+    def to_json(self):
+        return {"name": self.name,
+                "url": self.url,
+                }
+
 
 class ListHandler(tornado.web.RequestHandler):
     def list_directory(self, path):
@@ -43,11 +57,11 @@ class ListHandler(tornado.web.RequestHandler):
 
         response = {}
         for root, dirs, files in os.walk(root_dir, topdown=True):
-            dirs.sort()
+            dirs[:] = sorted([d for d in dirs if not d.startswith(".")])
             files.sort()
             relative_root = re.sub(PICT_DIR, "", root)
             response["root"] = relative_root
-            response["dirs"] = list(dirs)
+            response["dirs"] = [Directory(d, relative_root).to_json() for d in dirs]
             response["files"] = [Image(f, relative_root).to_json() for f in files if not f.startswith(".")]
 
             # Prevent recursive exploration
