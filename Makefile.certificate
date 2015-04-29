@@ -1,0 +1,15 @@
+default: server.crt server.key
+
+%.key:
+	@echo Generating key
+	openssl genrsa -des3 -out $@
+	@echo Remove Passphrase
+	openssl rsa -in $@ -out $@
+
+%.csr: %.key
+	@echo Generate Certificate Signing Request
+	openssl req -new -key $< -out $@
+
+%.crt: %.csr %.key
+	@echo Generate Self-signed Certificate
+	openssl x509 -req -days 365 -in $*.csr -signkey $*.key -out $*.crt
