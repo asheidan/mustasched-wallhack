@@ -118,7 +118,7 @@ var SlideShow = React.createClass({
 		var slides = this.state.files.slice(current, current + 1);
 		var slide;
 		if (slides.length > 0) {
-			slide = (<Slide key="1" src={slides[0]} next={this.next}/>);
+			slide = (<Slide key="1" src={slides[0]} next={this.next} root={this.state.root} />);
 		}
 		return (
 			<div style={style} className="SlideShow">
@@ -164,6 +164,7 @@ var Slide = React.createClass({
 				<img src={this.props.src.url} alt={this.props.src.name} onClick={this.handleClick} />
 				<div className="SlideInformation">
 				<InfoField name="filename" value={this.props.src.name} />
+				<InfoField name="root" value={this.props.root} />
 				{extra}
 				</div>
 				</div>
@@ -192,7 +193,7 @@ var DirectoryComponent = React.createClass({
 		this.props.changedir(this.props.dir);
 	},
 	render: function () {
-		return (<a href="#" className="DirectoryComponent" onClick={this.handleClick}>{this.props.dir.name}</a>);
+		return (<a href={this.props.dir.url} className="DirectoryComponent" onClick={this.handleClick}>{this.props.dir.name}</a>);
 	}
 });
 
