@@ -330,6 +330,7 @@ var FileList = React.createClass({
 var FileItem = React.createClass({
 	handleClick: function (event) {
 		event.preventDefault();
+		window.open(this.props.file.url);
 	},
 	render: function () {
 		var files = [];
