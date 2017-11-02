@@ -334,7 +334,7 @@ var FileItem = React.createClass({
 	},
 	render: function () {
 		var files = [];
-		return (<tr><td>F</td><td><a href="#" onClick={this.handleClick}>{this.props.file.name}</a></td></tr>);
+		return (<tr><td>F</td><td><a href={this.props.file.url} onClick={this.handleClick}>{this.props.file.name}</a></td></tr>);
 	},
 });
 
