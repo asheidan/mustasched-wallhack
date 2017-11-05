@@ -95,6 +95,15 @@ var SlideShow = React.createClass({
 			this.resetTimer();
 		}
 	},
+	nextDirectory: function () {
+		currentSlide = 0;
+		var dirs = this.state.dirs;
+		var nextDir = dirs.shift();
+		if (nextDir) {
+			this.fetchDirectoryList(nextDir.url);
+		}
+		this.setState({currentSlide: currentSlide});
+	},
 	resetTimer: function () {
 		this.stop();
 		this.setState({timer: window.setTimeout(this.next, 5000)});
@@ -127,6 +136,7 @@ var SlideShow = React.createClass({
 						<ToolbarButton text="Prev" icon="prev" action={this.prev} />
 						<ToolbarButton text={playPauseIcon} icon={playPauseIcon} action={playPauseAction} />
 						<ToolbarButton text="Next" icon="next" action={this.next} />
+						<ToolbarButton text="Next Directory" icon="nextDirectory" action={this.nextDirectory} />
 						<li><div><span>{current + 1}</span>/<span>{this.state.files.length}</span></div></li>
 					</ul>
 					{slide}
